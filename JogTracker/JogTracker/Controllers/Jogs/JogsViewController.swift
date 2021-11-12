@@ -1,4 +1,5 @@
 import UIKit
+import Reachability
 
 class JogsViewController: UIViewController {
     // MARK: - UI lets/vars
@@ -130,6 +131,21 @@ class JogsViewController: UIViewController {
         }
     }
     
+    // MARK: - Check Internet Connetion function
+    private func isInternetConnectionAvailable() -> Bool {
+        do {
+            let reachability = try Reachability()
+            guard reachability.connection != Reachability.Connection.unavailable else {
+                showAlert(title: "No Internet Connection!", message: "Please check your Internet connection!")
+                return false
+            }
+            return true
+        } catch let error {
+            print("Reachability error \(error)")
+        }
+        return false
+    }
+    
     // MARK: - IBActions
     @IBAction private func addJogButtonPressed() {
         showJogFormView(with: nil, action: .add)
@@ -177,48 +193,52 @@ extension JogsViewController: JogFormViewDelegate {
     }
     
     func editSelectedJog(with data: JogExternal) {
-        self.startSpinner()
-        networkManager.editSelectedJog(data) { result in
-            switch result {
-            case .success:
-                self.networkManager.getSavedJogs(decodeType: JogsDataBody.self) { result in
-                    switch result {
-                    case .success(let jogsDataBody):
-                        self.dataSource = jogsDataBody.response.jogs
-                        self.mainTableView.reloadData()
-                        self.stopSpinner()
-                    case .failure(let jogsDataBodyError):
-                        print(jogsDataBodyError)
+        if isInternetConnectionAvailable() {
+            self.startSpinner()
+            networkManager.editSelectedJog(data) { result in
+                switch result {
+                case .success:
+                    self.networkManager.getSavedJogs(decodeType: JogsDataBody.self) { result in
+                        switch result {
+                        case .success(let jogsDataBody):
+                            self.dataSource = jogsDataBody.response.jogs
+                            self.mainTableView.reloadData()
+                            self.stopSpinner()
+                        case .failure(let jogsDataBodyError):
+                            print(jogsDataBodyError)
+                        }
                     }
+                    self.stopSpinner()
+                    self.hideJogFormView()
+                case .failure(let error):
+                    print(error)
                 }
-                self.stopSpinner()
-                self.hideJogFormView()
-            case .failure(let error):
-                print(error)
             }
         }
     }
     
     func createNewJog(_ jog: JogInternal) {
-        self.startSpinner()
-        networkManager.addNewJog(jog) { result in
-            switch result {
-            case .success:
-                self.networkManager.getSavedJogs(decodeType: JogsDataBody.self) { result in
-                    switch result {
-                    case .success(let jogsDataBody):
-                        self.dataSource = jogsDataBody.response.jogs
-                        self.mainTableView.reloadData()
-                        self.stopSpinner()
-                    case .failure(let jogsDataBodyError):
-                        print(jogsDataBodyError)
+        if isInternetConnectionAvailable() {
+            self.startSpinner()
+            networkManager.addNewJog(jog) { result in
+                switch result {
+                case .success:
+                    self.networkManager.getSavedJogs(decodeType: JogsDataBody.self) { result in
+                        switch result {
+                        case .success(let jogsDataBody):
+                            self.dataSource = jogsDataBody.response.jogs
+                            self.mainTableView.reloadData()
+                            self.stopSpinner()
+                        case .failure(let jogsDataBodyError):
+                            print(jogsDataBodyError)
+                        }
                     }
+                    self.stopSpinner()
+                    self.hideJogFormView()
+                    
+                case .failure(let error):
+                    print(error)
                 }
-                self.stopSpinner()
-                self.hideJogFormView()
-                
-            case .failure(let error):
-                print(error)
             }
         }
     }

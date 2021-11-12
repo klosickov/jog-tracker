@@ -10,5 +10,8 @@ target 'JogTracker' do
   
   #SwiftyKeychainKit
   pod 'SwiftyKeychainKit', '1.0.0-beta.2'
+  
+  #RxReachability
+  pod 'RxReachability'
 
 end

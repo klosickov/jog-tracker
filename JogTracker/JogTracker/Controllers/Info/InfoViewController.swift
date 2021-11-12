@@ -161,6 +161,21 @@ class InfoViewController: UIViewController {
         }
     }
     
+    // MARK: - Check Internet Connetion function
+    private func isInternetConnectionAvailable() -> Bool {
+        do {
+            let reachability = try Reachability()
+            guard reachability.connection != Reachability.Connection.unavailable else {
+                showAlert(title: "No Internet Connection!", message: "Please check your Internet connection!")
+                return false
+            }
+            return true
+        } catch let error {
+            print("Reachability error \(error)")
+        }
+        return false
+    }
+    
     // MARK: - IBActions
     
     @IBAction private func sideMenuButtonPressed() {
@@ -180,7 +195,9 @@ extension InfoViewController: SideMenuViewDelegate {
             showAlert(title: "Access denied!", message: "Please sign in.")
             return
         }
-        self.startSpinner()
-        getSavedJogsResponse()
+        if isInternetConnectionAvailable() {
+            self.startSpinner()
+            getSavedJogsResponse()
+        }
     }
 }

@@ -1,5 +1,6 @@
 import UIKit
 import Alamofire
+import Reachability
 
 class AuthenticationViewController: UIViewController {
     // MARK: - UI lets/vars
@@ -24,7 +25,6 @@ class AuthenticationViewController: UIViewController {
     private let borderWidth = Constants.BorderWidth.AuthenticationScreen.self
     private let cornerRadius = Constants.CornerRadius.self
     private var isVCConfigured = false
-    
     
     // MARK: - Lifecycle functions
     override func viewDidLoad() {
@@ -137,9 +137,26 @@ class AuthenticationViewController: UIViewController {
         }
     }
     
+    // MARK: - Check Internet Connetion function
+    private func isInternetConnectionAvailable() -> Bool {
+        do {
+            let reachability = try Reachability()
+            guard reachability.connection != Reachability.Connection.unavailable else {
+                showAlert(title: "No Internet Connection!", message: "Please check your Internet connection!")
+                return false
+            }
+            return true
+        } catch let error {
+            print("Reachability error \(error)")
+        }
+        return false
+    }
+    
     // MARK: - IBActions
     @IBAction private func actionButtonPressed() {
-        signInIntoAPIResponse()
+        if isInternetConnectionAvailable() {
+            signInIntoAPIResponse()
+        }
     }
     
     @IBAction private func sideMenuButtonPressed() {
@@ -153,8 +170,10 @@ extension AuthenticationViewController: SideMenuViewDelegate {
             showAlert(title: "Access denied!", message: "Please sign in.")
             return
         }
-        self.startSpinner()
-        getSavedJogsResponse()
+        if isInternetConnectionAvailable() {
+            self.startSpinner()
+            getSavedJogsResponse()
+        }
     }
     func hideSideMenu() {
         hideSideMenuView()
